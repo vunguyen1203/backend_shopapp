@@ -1,0 +1,39 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+	<Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Platforms>AnyCPU;ARM32</Platforms>
+	  <Nullable>disable</Nullable>
+	  <UserSecretsId>a7837834-177c-4033-b725-a3f7577fedaf</UserSecretsId>
+	  <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="Paging\**" />
+    <Content Remove="Paging\**" />
+    <EmbeddedResource Remove="Paging\**" />
+    <None Remove="Paging\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="BCrypt.Net-Next" Version="4.1.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.24" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.24" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.24" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="8.0.24">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Serilog.AspNetCore" Version="8.0.3" />
+    <PackageReference Include="Slugify.Core" Version="5.1.1" />
+    <PackageReference Include="StackExchange.Redis" Version="2.11.8" />
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="wwwroot\images\brands\" />
+  </ItemGroup>
+
+</Project>
