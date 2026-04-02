@@ -34,4 +34,4 @@ Migration before run command.
 - docker build -t name_image .
 - docker run -d --name name_container -p 8080:8080 -p 8081:8081 -v ./app/logs:/app/logs -v ./app/wwwroot:/app/wwwroot name_image
 
-Docs api: Docker: "[your_domain]:8080/swagger".
+Docs api: "[your_domain]:8080/swagger".
