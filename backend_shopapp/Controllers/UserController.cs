@@ -32,25 +32,15 @@ namespace backend_shopapp.Controllers
         {
             (string accessToken, string refreshToken) = await _userService.Login(request);
 
-            Response.Cookies.Append("token", refreshToken, new CookieOptions
-            {
-                HttpOnly = true,
-                Secure = true,
-                SameSite = SameSiteMode.Strict,
-                Expires = DateTime.UtcNow.AddDays(7)
-            });
-
-            return Ok(new { message = "Login successfully", accessToken });
+            return Ok(new { message = "Login successfully", accessToken , refreshToken});
         }
 
         [Authorize]
         [HttpPost("logout")]
-        public async Task<IActionResult> Logout()
+        public async Task<IActionResult> Logout([FromQuery] string refreshToken)
         {
             string? id = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            string? refreshToken = Request.Cookies["token"];
             await _userService.Logout(id, refreshToken);
-            Response.Cookies.Delete("token");
 
             return Ok(new { message = "Logout successfully" });
         }
@@ -61,6 +51,7 @@ namespace backend_shopapp.Controllers
         {
             string? userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             await _userService.LogoutAll(userId);
+
             return Ok(new { message = "Logout successfully" });
         }
 
@@ -79,11 +70,11 @@ namespace backend_shopapp.Controllers
         }
 
         [HttpPost("refresh-token")]
-        public async Task<IActionResult> RefreshToken()
+        public async Task<IActionResult> RefreshToken([FromQuery] string refreshToken)
         {
-            string? refreshToken = Request.Cookies["token"];
-            if (string.IsNullOrWhiteSpace(refreshToken)) return Unauthorized("No token in cookie");
+            if (string.IsNullOrWhiteSpace(refreshToken)) return Unauthorized("No token");
             string accessToken = await _userService.RefreshToken(refreshToken);
+
             return Ok(new { accessToken });
         }
 

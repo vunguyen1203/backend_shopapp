@@ -7,6 +7,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using StackExchange.Redis;
 using System.Security.Cryptography;
+using System.Text;
 using System.Text.Json;
 
 namespace backend_shopapp.Services
@@ -68,33 +69,41 @@ namespace backend_shopapp.Services
             if (user == null || !BCrypt.Net.BCrypt.Verify(request.Password, user.Password))
                 throw new UnauthorizedException("Invalid email or password");
 
-            if (user.IsBlocked) throw new ForbiddenException("User has been blocked");
+            if (user.IsBlocked) 
+                throw new ForbiddenException("User has been blocked");
 
             string accessToken = _jwtService.GenerateAccessToken(user);
             string refreshToken = _jwtService.GenerateRefreshToken();
 
-            await _cache.StringSetAsync($"refresh_token:{refreshToken}", user.Id, TimeSpan.FromDays(7));
-            await _cache.SetAddAsync($"user_refresh_tokens:{user.Id}", refreshToken);
+            string hashedRefreshToken = HashToken(refreshToken);
+
+            await _cache.StringSetAsync($"refresh_token:{hashedRefreshToken}", user.Id, TimeSpan.FromDays(7));
+            await _cache.SetAddAsync($"user_refresh_tokens:{user.Id}", hashedRefreshToken);
 
             return (accessToken, refreshToken);
         }
 
         public async Task Logout(string userId, string refreshToken)
         {
-            string key = $"user_refresh_tokens:{userId}";
-            var token = await _cache.StringGetAsync($"refresh_token:{refreshToken}");
-            var tokens = await _cache.SetMembersAsync(key);
-            if (token.IsNullOrEmpty || tokens.IsNullOrEmpty()) throw new NotFoundException("Refresh Token not found");
+            string hashedToken = HashToken(refreshToken);
 
-            await _cache.KeyDeleteAsync($"refresh_token:{refreshToken}");
-            await _cache.SetRemoveAsync(key, refreshToken);
+            string key = $"user_refresh_tokens:{userId}";
+            var token = await _cache.StringGetAsync($"refresh_token:{hashedToken}");
+            var tokens = await _cache.SetMembersAsync(key);
+
+            if (token.IsNullOrEmpty || tokens.IsNullOrEmpty()) 
+                throw new NotFoundException("Refresh Token not found");
+
+            await _cache.KeyDeleteAsync($"refresh_token:{hashedToken}");
+            await _cache.SetRemoveAsync(key, hashedToken);
         }
 
         public async Task LogoutAll(string userId)
         {
             string key = $"user_refresh_tokens:{userId}";
             var tokens = await _cache.SetMembersAsync(key);
-            if (tokens.IsNullOrEmpty()) throw new NotFoundException("Refresh Token not found");
+            if (tokens.IsNullOrEmpty()) 
+                throw new NotFoundException("Refresh Token not found");
 
             foreach (var token in tokens)
             {
@@ -102,6 +111,23 @@ namespace backend_shopapp.Services
             }
 
             await _cache.KeyDeleteAsync(key);
+        }
+
+        public async Task<string> RefreshToken(string refreshToken)
+        {
+            string hashedToken = HashToken(refreshToken);
+
+            var stored = await _cache.StringGetAsync($"refresh_token:{hashedToken}");
+
+            if (stored.IsNullOrEmpty)
+                throw new UnauthorizedException("Refresh token has expired or not found");
+
+            var user = await _db.Users.FindAsync(stored.ToString());
+            if (user == null) throw new NotFoundException("User not found");
+
+            string accessToken = _jwtService.GenerateAccessToken(user);
+
+            return accessToken;
         }
 
         public async Task ForgotPassword(ForgotPasswordRequest request)
@@ -137,21 +163,6 @@ namespace backend_shopapp.Services
             user.UpdatedAt = DateTime.UtcNow;
 
             await _db.SaveChangesAsync();
-        }
-
-        public async Task<string> RefreshToken(string refreshToken)
-        {
-            var stored = await _cache.StringGetAsync($"refresh_token:{refreshToken}");
-
-            if (stored.IsNullOrEmpty)
-                throw new UnauthorizedException("Refresh token has expired or not found");
-
-            var user = await _db.Users.FindAsync(stored.ToString());
-            if (user == null) throw new NotFoundException("User not found");
-
-            string accessToken = _jwtService.GenerateAccessToken(user);
-
-            return accessToken;
         }
 
         public async Task Delete(string currentId, string currentRole, string targetId)
@@ -286,6 +297,13 @@ namespace backend_shopapp.Services
                 return false;
 
             return true;
+        }
+
+        private string HashToken(string token)
+        {
+            using var sha256 = SHA256.Create();
+            var bytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(token));
+            return Convert.ToBase64String(bytes);
         }
     }
 }
