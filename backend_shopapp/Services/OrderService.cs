@@ -49,12 +49,6 @@ namespace backend_shopapp.Services
                 if (order.Payment == null)
                     throw new NotFoundException("Payment not found");
 
-                if (order.Payment.PaymentMethod == nameof(PaymentMethod.vnpay) &&
-                    order.Payment.PaymentStatus == nameof(PaymentStatus.paid))
-                {
-                    throw new ConflictException("Already paid");
-                }
-
                 if (order.Payment.PaymentMethod == nameof(PaymentMethod.cod))
                 {
                     order.Payment.PaymentStatus = nameof(PaymentStatus.paid);

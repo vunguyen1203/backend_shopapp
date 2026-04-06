@@ -130,7 +130,7 @@ builder.Services.AddCors(options =>
     options.AddPolicy("MyPolicy", policy =>
     {
         policy
-            .WithOrigins("http://localhost:5173")
+            .WithOrigins()
             .AllowAnyMethod()
             .AllowAnyHeader()
             .AllowCredentials();
@@ -162,11 +162,16 @@ app.UseRateLimiter();
 
 app.UseSerilogRequestLogging();
 
-if (app.Environment.IsDevelopment() || app.Environment.IsProduction())
+app.UseSwagger();
+app.UseSwaggerUI();
+
+using (var scope = app.Services.CreateScope())
 {
-    app.UseSwagger();
-    app.UseSwaggerUI();
+    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    db.Database.Migrate();
 }
+
+
 
 app.UseHttpsRedirection();
 

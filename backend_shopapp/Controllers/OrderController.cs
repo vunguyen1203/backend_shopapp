@@ -70,7 +70,7 @@ namespace backend_shopapp.Controllers
         public async Task<IActionResult> ConfirmOrderCodPayment([FromRoute] string id, [FromBody] ConfirmOrderRequest request)
         {
             await _orderService.ConfirmOrderSuccess(id);
-            return NoContent();
+            return Ok(new { message = "Confirm successfully" });
         }
 
         [Authorize(Roles = "admin,mod")]
