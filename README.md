@@ -6,7 +6,7 @@ Hi there, I spent some time writing one backend RESTful api project for shop app
 
 - Asp.Net core Web Api (.Net 8).
 - SQL Server.
-- Redis
+- Redis.
 - Entity Framework core.
 - Authentication and Authorization with jwt.
 - Swagger.
