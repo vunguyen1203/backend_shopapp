@@ -12,7 +12,7 @@ using backend_shopapp;
 namespace backend_shopapp.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260428033620_create-tb")]
+    [Migration("20260429090118_create-tb")]
     partial class createtb
     {
         /// <inheritdoc />
