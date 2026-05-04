@@ -3,6 +3,7 @@ obj/
 out/
 publish/
 wwwroot/
+Migrations/
 
 .vs/
 *.user
@@ -21,7 +22,6 @@ Log/
 
 ScaffoldingReadMe.txt
 
-Migrations/*
 
 appsettings.Development.json
 appsettings.Local.json
